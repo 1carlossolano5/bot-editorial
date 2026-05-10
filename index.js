@@ -3,8 +3,6 @@ const app = express();
 app.use(express.urlencoded({ extended: false }));
 
 const sesiones = {};
-
-// Temporizadores por usuario
 const timers = {};
 
 function limpiarTimers(telefono) {
@@ -19,369 +17,107 @@ function obtenerRespuesta(mensajeUsuario, telefono) {
     const texto = mensajeUsuario.toLowerCase().trim();
     const sesion = sesiones[telefono] || { paso: 'inicio' };
 
-    // SALIR
-    if (texto === '0' || texto === 'salir' || texto === 'adios' || texto === 'adiós') {
+    if (texto === '0' || texto === 'salir' || texto === 'adios') {
         delete sesiones[telefono];
         limpiarTimers(telefono);
-        return `👋 ¡Hasta luego! Gracias por contactar a *Editorial Letras de Colombia*.
-Si necesitas algo más en el futuro, escríbenos. ¡Que disfrutes tu lectura! 📚`;
+        return 'Hasta luego! Gracias por contactar a Editorial Letras de Colombia. Que disfrutes tu lectura!';
     }
 
-    // RESPUESTA A "¿SIGUES AHÍ?"
     if (sesion.paso === 'esperando_confirmacion') {
-        if (texto === 'sí' || texto === 'si' || texto === '1') {
+        if (texto === 'si' || texto === '1') {
             sesiones[telefono] = { paso: 'menu' };
-            return `✅ ¡Perfecto! Continuamos.
-
-¿En qué más puedo ayudarte?
-
-1️⃣ Catálogo de libros
-2️⃣ Hacer un pedido
-3️⃣ Estado de mi pedido
-4️⃣ Precios y formas de pago
-5️⃣ Eventos y ferias literarias
-6️⃣ Distribuidores y puntos de venta
-7️⃣ Trabaja con nosotros
-8️⃣ Contacto y ubicación
-9️⃣ Hablar con un asesor
-0️⃣ Salir
-
-Responde con el número de tu opción 👆`;
+            return 'Perfecto! Continuamos.\n\nEn que mas puedo ayudarte?\n\n1 Catalogo de libros\n2 Hacer un pedido\n3 Estado de mi pedido\n4 Precios y formas de pago\n5 Eventos y ferias literarias\n6 Distribuidores y puntos de venta\n7 Trabaja con nosotros\n8 Contacto y ubicacion\n9 Hablar con un asesor\n0 Salir\n\nResponde con el numero de tu opcion.';
         } else {
             delete sesiones[telefono];
             limpiarTimers(telefono);
-            return `👋 ¡Hasta luego! Gracias por contactar a *Editorial Letras de Colombia*. ¡Que disfrutes tu lectura! 📚`;
+            return 'Hasta luego! Gracias por contactar a Editorial Letras de Colombia. Que disfrutes tu lectura!';
         }
     }
 
-    // MENU PRINCIPAL
-    if (texto === 'hola' || texto === 'inicio' || texto === 'menu' || texto === 'menú') {
+    if (texto === 'hola' || texto === 'inicio' || texto === 'menu') {
         sesiones[telefono] = { paso: 'menu' };
-        return `👋 ¡Bienvenido a *Editorial Letras de Colombia*!
-
-Somos una editorial con más de 20 años llevando la literatura colombiana al mundo 📚
-
-¿En qué puedo ayudarte hoy?
-
-1️⃣ Catálogo de libros
-2️⃣ Hacer un pedido
-3️⃣ Estado de mi pedido
-4️⃣ Precios y formas de pago
-5️⃣ Eventos y ferias literarias
-6️⃣ Distribuidores y puntos de venta
-7️⃣ Trabaja con nosotros
-8️⃣ Contacto y ubicación
-9️⃣ Hablar con un asesor
-0️⃣ Salir
-
-Responde con el número de tu opción 👆`;
+        return 'Bienvenido a Editorial Letras de Colombia!\n\nSomos una editorial con mas de 20 anos llevando la literatura colombiana al mundo.\n\nEn que puedo ayudarte hoy?\n\n1 Catalogo de libros\n2 Hacer un pedido\n3 Estado de mi pedido\n4 Precios y formas de pago\n5 Eventos y ferias literarias\n6 Distribuidores y puntos de venta\n7 Trabaja con nosotros\n8 Contacto y ubicacion\n9 Hablar con un asesor\n0 Salir\n\nResponde con el numero de tu opcion.';
     }
 
-    // OPCION 1 - CATALOGO
-    if (texto === '1' || texto === 'catálogo' || texto === 'catalogo') {
+    if (texto === '1' || texto === 'catalogo') {
         sesiones[telefono] = { paso: 'catalogo' };
-        return `📚 *Catálogo Editorial Letras de Colombia*
-
-Tenemos libros en estos géneros:
-
-1️⃣ Literatura colombiana
-2️⃣ Literatura latinoamericana
-3️⃣ Poesía
-4️⃣ Libros infantiles y juveniles
-5️⃣ Historia y ciencias sociales
-6️⃣ Académicos y universitarios
-7️⃣ Autoayuda y desarrollo personal
-
-Escribe el número del género que te interesa.
-O escribe *menu* para volver al inicio.`;
+        return 'Catalogo Editorial Letras de Colombia\n\nTenemos libros en estos generos:\n\n1 Literatura colombiana\n2 Literatura latinoamericana\n3 Poesia\n4 Libros infantiles y juveniles\n5 Historia y ciencias sociales\n6 Academicos y universitarios\n7 Autoayuda y desarrollo personal\n\nEscribe el numero del genero que te interesa.\nO escribe menu para volver al inicio.';
     }
 
     if (sesion.paso === 'catalogo') {
-        if (texto === '1') {
-            return `🇨🇴 *Literatura Colombiana — Destacados*
-
-📕 Río sin orillas — Jorge Franco — $48.000
-📗 La vida de los muertos — Piedad Bonnett — $52.000
-📘 El ruido de las cosas al caer — Juan Gabriel Vásquez — $55.000
-📙 Fue así — Tomás González — $44.000
-📒 Satanás — Mario Mendoza — $46.000
-
-¿Te interesa alguno? Escríbeme el título.
-O escribe *menu* para volver al inicio.`;
-        }
-        if (texto === '2') {
-            return `🌎 *Literatura Latinoamericana — Destacados*
-
-📕 Pedro Páramo — Juan Rulfo — $38.000
-📗 Rayuela — Julio Cortázar — $52.000
-📘 La casa de los espíritus — Isabel Allende — $58.000
-📙 El túnel — Ernesto Sábato — $42.000
-📒 Ficciones — Jorge Luis Borges — $45.000
-
-¿Te interesa alguno? Escríbeme el título.
-O escribe *menu* para volver al inicio.`;
-        }
-        if (texto === '3') {
-            return `✍️ *Poesía — Destacados*
-
-📕 Veinte poemas de amor — Pablo Neruda — $32.000
-📗 Los versos del capitán — Pablo Neruda — $35.000
-📘 Antología poética — León de Greiff — $40.000
-📙 El libro de los abrazos — Eduardo Galeano — $44.000
-
-¿Te interesa alguno? Escríbeme el título.
-O escribe *menu* para volver al inicio.`;
-        }
-        if (texto === '4') {
-            return `👧 *Libros Infantiles y Juveniles — Destacados*
-
-📕 El principito — Antoine de Saint-Exupéry — $28.000
-📗 Matilda — Roald Dahl — $32.000
-📘 Manolito Gafotas — Elvira Lindo — $30.000
-📙 El diario de un niño rata — Jeff Kinney — $35.000
-📒 Cuentos de la selva — Horacio Quiroga — $26.000
-
-¿Te interesa alguno? Escríbeme el título.
-O escribe *menu* para volver al inicio.`;
-        }
-        if (texto === '5') {
-            return `📜 *Historia y Ciencias Sociales — Destacados*
-
-📕 Colombia una nación a pesar de sí misma — David Bushnell — $62.000
-📗 Historia de Colombia — Germán Arciniegas — $58.000
-📘 Así habló Colombia — Varios autores — $55.000
-📙 La violencia en Colombia — Orlando Fals Borda — $60.000
-
-¿Te interesa alguno? Escríbeme el título.
-O escribe *menu* para volver al inicio.`;
-        }
-        if (texto === '6') {
-            return `🎓 *Libros Académicos y Universitarios*
-
-📕 Introducción al derecho — Hernando Devis Echandía — $75.000
-📗 Fundamentos de administración — Varios autores — $68.000
-📘 Estadística para administración — Berenson — $82.000
-📙 Biología molecular — Watson — $90.000
-
-Escribe el nombre de tu carrera y te ayudo a encontrar el libro.
-O escribe *menu* para volver al inicio.`;
-        }
-        if (texto === '7') {
-            return `🌟 *Autoayuda y Desarrollo Personal — Destacados*
-
-📕 Los cuatro acuerdos — Miguel Ruiz — $38.000
-📗 El poder del ahora — Eckhart Tolle — $42.000
-📘 Hábitos atómicos — James Clear — $52.000
-📙 La inteligencia emocional — Daniel Goleman — $48.000
-📒 El monje que vendió su Ferrari — Robin Sharma — $40.000
-
-¿Te interesa alguno? Escríbeme el título.
-O escribe *menu* para volver al inicio.`;
-        }
+        if (texto === '1') return 'Literatura Colombiana - Destacados\n\nRio sin orillas - Jorge Franco - $48.000\nLa vida de los muertos - Piedad Bonnett - $52.000\nEl ruido de las cosas al caer - Juan Gabriel Vasquez - $55.000\nFue asi - Tomas Gonzalez - $44.000\nSatanas - Mario Mendoza - $46.000\n\nTe interesa alguno? Escribeme el titulo.\nO escribe menu para volver al inicio.';
+        if (texto === '2') return 'Literatura Latinoamericana - Destacados\n\nPedro Paramo - Juan Rulfo - $38.000\nRayuela - Julio Cortazar - $52.000\nLa casa de los espiritus - Isabel Allende - $58.000\nEl tunel - Ernesto Sabato - $42.000\nFicciones - Jorge Luis Borges - $45.000\n\nTe interesa alguno? Escribeme el titulo.\nO escribe menu para volver al inicio.';
+        if (texto === '3') return 'Poesia - Destacados\n\nVeinte poemas de amor - Pablo Neruda - $32.000\nLos versos del capitan - Pablo Neruda - $35.000\nAntologia poetica - Leon de Greiff - $40.000\nEl libro de los abrazos - Eduardo Galeano - $44.000\n\nTe interesa alguno? Escribeme el titulo.\nO escribe menu para volver al inicio.';
+        if (texto === '4') return 'Libros Infantiles y Juveniles - Destacados\n\nEl principito - Antoine de Saint-Exupery - $28.000\nMatilda - Roald Dahl - $32.000\nManolito Gafotas - Elvira Lindo - $30.000\nEl diario de un nino rata - Jeff Kinney - $35.000\nCuentos de la selva - Horacio Quiroga - $26.000\n\nTe interesa alguno? Escribeme el titulo.\nO escribe menu para volver al inicio.';
+        if (texto === '5') return 'Historia y Ciencias Sociales - Destacados\n\nColombia una nacion a pesar de si misma - David Bushnell - $62.000\nHistoria de Colombia - German Arciniegas - $58.000\nAsi hablo Colombia - Varios autores - $55.000\nLa violencia en Colombia - Orlando Fals Borda - $60.000\n\nTe interesa alguno? Escribeme el titulo.\nO escribe menu para volver al inicio.';
+        if (texto === '6') return 'Libros Academicos y Universitarios\n\nIntroduccion al derecho - Hernando Devis Echandia - $75.000\nFundamentos de administracion - Varios autores - $68.000\nEstadistica para administracion - Berenson - $82.000\nBiologia molecular - Watson - $90.000\n\nEscribe el nombre de tu carrera y te ayudo a encontrar el libro.\nO escribe menu para volver al inicio.';
+        if (texto === '7') return 'Autoayuda y Desarrollo Personal - Destacados\n\nLos cuatro acuerdos - Miguel Ruiz - $38.000\nEl poder del ahora - Eckhart Tolle - $42.000\nHabitos atomicos - James Clear - $52.000\nLa inteligencia emocional - Daniel Goleman - $48.000\nEl monje que vendio su Ferrari - Robin Sharma - $40.000\n\nTe interesa alguno? Escribeme el titulo.\nO escribe menu para volver al inicio.';
     }
 
-    // OPCION 2 - HACER UN PEDIDO
     if (texto === '2' || texto === 'pedido' || texto === 'comprar') {
         sesiones[telefono] = { paso: 'pedido' };
-        return `🛒 *¿Cómo hacer un pedido?*
-
-Es muy fácil, tienes 3 opciones:
-
-🌐 Web: www.editorialletras.com.co
-📞 Teléfono: 601 234 5678
-💬 Por aquí mismo: Escríbeme el título del libro que quieres y tu ciudad.
-
-📦 *Tiempos de entrega:*
-- Bogotá: 1 a 2 días hábiles
-- Otras ciudades: 3 a 5 días hábiles
-- Internacional: 10 a 15 días hábiles
-
-¿Quieres hacer tu pedido por WhatsApp? Escríbeme el título y tu ciudad 📍
-O escribe *menu* para volver al inicio.`;
+        return 'Como hacer un pedido?\n\nEs muy facil, tienes 3 opciones:\n\nWeb: www.editorialletras.com.co\nTelefono: 601 234 5678\nPor aqui mismo: Escribeme el titulo del libro y tu ciudad.\n\nTiempos de entrega:\n- Bogota: 1 a 2 dias habiles\n- Otras ciudades: 3 a 5 dias habiles\n- Internacional: 10 a 15 dias habiles\n\nO escribe menu para volver al inicio.';
     }
 
-    // OPCION 3 - ESTADO DEL PEDIDO
     if (texto === '3' || texto === 'estado') {
         sesiones[telefono] = { paso: 'estado_pedido' };
-        return `📦 *Consultar estado de pedido*
-
-Por favor escríbeme tu número de pedido.
-Ejemplo: *EL-2026-0081*
-
-Lo encuentras en el correo de confirmación.
-O escribe *menu* para volver al inicio.`;
+        return 'Consultar estado de pedido\n\nPor favor escribeme tu numero de pedido.\nEjemplo: EL-2026-0081\n\nLo encuentras en el correo de confirmacion.\nO escribe menu para volver al inicio.';
     }
 
     if (sesion.paso === 'estado_pedido') {
         if (texto.startsWith('el-')) {
-            return `✅ *Pedido ${mensajeUsuario.toUpperCase()} encontrado*
-
-📗 Título: Hábitos atómicos
-📍 Estado: *En camino* 🚚
-🏢 Transportadora: Servientrega
-📅 Entrega estimada: 12 de mayo de 2026
-🔍 Número de guía: SRV-887234
-
-¿Necesitas algo más? Escribe *menu* para volver al inicio.`;
+            return 'Pedido ' + mensajeUsuario.toUpperCase() + ' encontrado\n\nTitulo: Habitos atomicos\nEstado: En camino\nTransportadora: Servientrega\nEntrega estimada: 12 de mayo de 2026\nNumero de guia: SRV-887234\n\nNecesitas algo mas? Escribe menu para volver al inicio.';
         } else {
-            return `❌ No encontré ese número de pedido.
-
-Verifica que el formato sea correcto. Ejemplo: *EL-2026-0081*
-O escribe *asesor* para hablar con una persona.`;
+            return 'No encontre ese numero de pedido.\n\nVerifica que el formato sea correcto. Ejemplo: EL-2026-0081\nO escribe asesor para hablar con una persona.';
         }
     }
 
-    // OPCION 4 - PRECIOS Y PAGOS
     if (texto === '4' || texto === 'pago' || texto === 'precio') {
-        return `💳 *Precios y Formas de Pago*
-
-Nuestros libros van desde *$26.000 hasta $90.000 COP*
-
-*Formas de pago:*
-💵 Efectivo contra entrega
-💳 Tarjeta débito y crédito
-📱 Nequi y Daviplata
-🏦 Transferencia bancaria
-🌐 PSE en nuestra web
-
-*Descuentos especiales:*
-🎓 Estudiantes: 10% (con carné)
-📦 5 libros o más: 15%
-🏫 Colegios y universidades: 20%
-
-O escribe *menu* para volver al inicio.`;
+        return 'Precios y Formas de Pago\n\nNuestros libros van desde $26.000 hasta $90.000 COP\n\nFormas de pago:\n- Efectivo contra entrega\n- Tarjeta debito y credito\n- Nequi y Daviplata\n- Transferencia bancaria\n- PSE en nuestra web\n\nDescuentos especiales:\n- Estudiantes: 10% (con carne)\n- 5 libros o mas: 15%\n- Colegios y universidades: 20%\n\nO escribe menu para volver al inicio.';
     }
 
-    // OPCION 5 - EVENTOS
     if (texto === '5' || texto === 'eventos' || texto === 'ferias') {
-        return `🎪 *Eventos y Ferias Literarias 2026*
-
-📖 *FILBo — Bogotá*
-📍 Corferias — Stand 412, Pabellón 4
-🗓 26 abril al 11 mayo
-
-📖 *Feria del Libro de Cali*
-📍 Plaza Mayor
-🗓 15 al 25 de junio
-
-📖 *Festival de Literatura — Medellín*
-📍 Parque Explora
-🗓 10 al 20 de julio
-
-🎁 Descuentos hasta del 30% en todos los eventos.
-
-O escribe *menu* para volver al inicio.`;
+        return 'Eventos y Ferias Literarias 2026\n\nFILBo - Bogota\nCorferias - Stand 412, Pabellon 4\n26 abril al 11 mayo\n\nFeria del Libro de Cali\nPlaza Mayor\n15 al 25 de junio\n\nFestival de Literatura - Medellin\nParque Explora\n10 al 20 de julio\n\nDescuentos hasta del 30% en todos los eventos.\n\nO escribe menu para volver al inicio.';
     }
 
-    // OPCION 6 - DISTRIBUIDORES
     if (texto === '6' || texto === 'distribuidores') {
-        return `🏪 *Puntos de Venta*
-
-*Bogotá:*
-📍 Librería Nacional — Calle 72 #10-34
-📍 Librería Lerner — Av. Jiménez #4-35
-📍 Panamericana — Centro Andino
-
-*Medellín:*
-📍 Librería Prometeo — El Poblado
-📍 Jardín de Libros — Laureles
-
-*Cali:*
-📍 Librería Nacional — Chipichape
-📍 Libros & Libros — Granada
-
-*Digital:*
-🌐 www.editorialletras.com.co
-📦 Rappi, Mercado Libre, Amazon, EBAY
-
-O escribe *menu* para volver al inicio.`;
+        return 'Puntos de Venta\n\nBogota:\nLibreria Nacional - Calle 72 #10-34\nLibreria Lerner - Av. Jimenez #4-35\nPanamericana - Centro Andino\n\nMedellin:\nLibreria Prometeo - El Poblado\nJardin de Libros - Laureles\n\nCali:\nLibreria Nacional - Chipichape\nLibros y Libros - Granada\n\nDigital:\nwww.editorialletras.com.co\nRappi, Mercado Libre, Amazon\n\nO escribe menu para volver al inicio.';
     }
 
-    // OPCION 7 - TRABAJO
     if (texto === '7' || texto === 'trabajo' || texto === 'empleo') {
-        return `💼 *Trabaja con Nosotros*
-
-Vacantes abiertas:
-✍️ Editor de contenidos — Bogotá
-📱 Community Manager — Remoto
-🎨 Diseñador gráfico — Bogotá
-📦 Auxiliar de bodega — Bogotá
-
-*¿Eres autor?*
-📧 publicaciones@editorialletras.com.co
-
-*Aplicar a vacante:*
-📧 rrhh@editorialletras.com.co
-
-O escribe *menu* para volver al inicio.`;
+        return 'Trabaja con Nosotros\n\nVacantes abiertas:\n- Editor de contenidos - Bogota\n- Community Manager - Remoto\n- Disenador grafico - Bogota\n- Auxiliar de bodega - Bogota\n\nEres autor?\npublicaciones@editorialletras.com.co\n\nAplicar a vacante:\nrrhh@editorialletras.com.co\n\nO escribe menu para volver al inicio.';
     }
 
-    // OPCION 8 - CONTACTO
     if (texto === '8' || texto === 'contacto' || texto === 'ubicacion') {
-        return `📍 *Contacto y Ubicación*
-
-🏢 Calle 93 #15-28, Piso 3, Bogotá
-📞 601 234 5678
-📱 310 987 6543
-📧 info@editorialletras.com.co
-🌐 www.editorialletras.com.co
-
-⏰ Lun–Vie: 8am–6pm
-⏰ Sábados: 9am–1pm
-
-📱 Instagram y Facebook: @editorialletras
-
-O escribe *menu* para volver al inicio.`;
+        return 'Contacto y Ubicacion\n\nCalle 93 #15-28, Piso 3, Bogota\nTelefono: 601 234 5678\nCelular: 310 987 6543\nCorreo: info@editorialletras.com.co\nWeb: www.editorialletras.com.co\n\nHorario:\nLun-Vie: 8am-6pm\nSabados: 9am-1pm\n\nInstagram y Facebook: @editorialletras\n\nO escribe menu para volver al inicio.';
     }
 
-    // OPCION 9 - ASESOR
     if (texto === '9' || texto === 'asesor' || texto === 'persona') {
-        return `👤 *Conectando con un asesor...*
-
-Un miembro del equipo te atenderá pronto.
-
-⏰ Lun–Vie: 8am–6pm
-⏰ Sábados: 9am–1pm
-
-Fuera de horario respondemos al siguiente día hábil.
-Escribe *menu* para ver las opciones disponibles.`;
+        return 'Conectando con un asesor...\n\nUn miembro del equipo teatendera pronto.\n\nHorario:\nLun-Vie: 8am-6pm\nSabados: 9am-1pm\n\nFuera de horario respondemos al siguiente dia habil.\nEscribe menu para ver las opciones disponibles.';
     }
 
-    // RESPUESTA POR DEFECTO
-    return `No entendí tu mensaje 😅
-
-Escribe *hola* o *menu* para ver todas las opciones.
-O escribe *asesor* si quieres hablar con una persona.`;
+    return 'No entendi tu mensaje.\n\nEscribe hola o menu para ver todas las opciones.\nO escribe asesor si quieres hablar con una persona.';
 }
 
 app.post('/webhook', (req, res) => {
     const mensajeUsuario = req.body.Body;
     const telefono = req.body.From;
 
-    // Limpiar timers anteriores cada vez que el usuario escribe
     limpiarTimers(telefono);
 
     const respuesta = obtenerRespuesta(mensajeUsuario, telefono);
 
-    // Timer 2 minutos — preguntar si sigue activo
     timers[telefono].inactivo = setTimeout(() => {
         sesiones[telefono] = { paso: 'esperando_confirmacion' };
-        // No podemos enviar proactivamente con Twilio sandbox
-        // En producción con Meta API esto sí funciona
     }, 2 * 60 * 1000);
 
-    // Timer 5 minutos — cerrar sesión
     timers[telefono].cerrar = setTimeout(() => {
         delete sesiones[telefono];
         delete timers[telefono];
     }, 5 * 60 * 1000);
 
     res.set('Content-Type', 'text/xml');
-    res.send(`
-    <Response>
-      <Message>${respuesta}</Message>
-    </Response>
-  `);
+    res.send('<?xml version="1.0" encoding="UTF-8"?><Response><Message>' + respuesta + '</Message></Response>');
 });
 
 app.listen(process.env.PORT || 3000, () => {
