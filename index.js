@@ -292,7 +292,7 @@ O escribe *menu* para volver al inicio.`;
 
 *Digital:*
 🌐 www.editorialletras.com.co
-📦 Rappi, Mercado Libre, Amazon
+📦 Rappi, Mercado Libre, Amazon, EBAY
 
 O escribe *menu* para volver al inicio.`;
     }
