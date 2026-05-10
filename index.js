@@ -4,34 +4,38 @@ app.use(express.urlencoded({ extended: false }));
 
 const sesiones = {};
 
-// Temporizadores por usuario
-const timers = {};
-
-function limpiarTimers(telefono) {
-    if (timers[telefono]) {
-        clearTimeout(timers[telefono].inactivo);
-        clearTimeout(timers[telefono].cerrar);
-    }
-    timers[telefono] = {};
-}
+// ✅ Constantes de tiempo
+const DOS_MINUTOS = 2 * 60 * 1000;
+const CINCO_MINUTOS = 5 * 60 * 1000;
 
 function obtenerRespuesta(mensajeUsuario, telefono) {
     const texto = mensajeUsuario.toLowerCase().trim();
-    const sesion = sesiones[telefono] || { paso: 'inicio' };
+    const ahora = Date.now();
 
-    // SALIR
-    if (texto === '0' || texto === 'salir' || texto === 'adios' || texto === 'adiós') {
+    // ✅ Si no hay sesión, crear una nueva con timestamp
+    if (!sesiones[telefono]) {
+        sesiones[telefono] = { paso: 'inicio', ultimoMensaje: ahora };
+    }
+
+    const sesion = sesiones[telefono];
+    const tiempoInactivo = ahora - (sesion.ultimoMensaje || ahora);
+
+    // ✅ Actualizar timestamp en cada mensaje
+    sesion.ultimoMensaje = ahora;
+
+    // ── REVISAR INACTIVIDAD ANTES DE CUALQUIER OTRA LÓGICA ──────────────────
+
+    // Más de 5 minutos → cerrar sesión con mensaje de despedida
+    if (tiempoInactivo > CINCO_MINUTOS && sesion.paso !== 'inicio') {
         delete sesiones[telefono];
-        limpiarTimers(telefono);
         return `👋 ¡Hasta luego! Gracias por contactar a *Editorial Letras de Colombia*.
 Si necesitas algo más en el futuro, escríbenos. ¡Que disfrutes tu lectura! 📚`;
     }
 
-    // RESPUESTA A "¿SIGUES AHÍ?"
-    if (sesion.paso === 'esperando_confirmacion') {
-        if (texto === 'sí' || texto === 'si' || texto === '1') {
-            sesiones[telefono] = { paso: 'menu' };
-            return `✅ ¡Perfecto! Continuamos.
+    // Entre 2 y 5 minutos → avisar inactividad y retomar con el menú
+    if (tiempoInactivo > DOS_MINUTOS && sesion.paso !== 'inicio') {
+        sesion.paso = 'menu';
+        return `😊 ¡Hola de nuevo! Llevabas un rato sin escribir.
 
 ¿En qué más puedo ayudarte?
 
@@ -47,16 +51,20 @@ Si necesitas algo más en el futuro, escríbenos. ¡Que disfrutes tu lectura! �
 0️⃣ Salir
 
 Responde con el número de tu opción 👆`;
-        } else {
-            delete sesiones[telefono];
-            limpiarTimers(telefono);
-            return `👋 ¡Hasta luego! Gracias por contactar a *Editorial Letras de Colombia*. ¡Que disfrutes tu lectura! 📚`;
-        }
+    }
+
+    // ── LÓGICA ORIGINAL ──────────────────────────────────────────────────────
+
+    // SALIR
+    if (texto === '0' || texto === 'salir' || texto === 'adios' || texto === 'adiós') {
+        delete sesiones[telefono];
+        return `👋 ¡Hasta luego! Gracias por contactar a *Editorial Letras de Colombia*.
+Si necesitas algo más en el futuro, escríbenos. ¡Que disfrutes tu lectura! 📚`;
     }
 
     // MENU PRINCIPAL
     if (texto === 'hola' || texto === 'inicio' || texto === 'menu' || texto === 'menú') {
-        sesiones[telefono] = { paso: 'menu' };
+        sesiones[telefono] = { paso: 'menu', ultimoMensaje: ahora };
         return `👋 ¡Bienvenido a *Editorial Letras de Colombia*!
 
 Somos una editorial con más de 20 años llevando la literatura colombiana al mundo 📚
@@ -79,7 +87,7 @@ Responde con el número de tu opción 👆`;
 
     // OPCION 1 - CATALOGO
     if (texto === '1' || texto === 'catálogo' || texto === 'catalogo') {
-        sesiones[telefono] = { paso: 'catalogo' };
+        sesiones[telefono] = { paso: 'catalogo', ultimoMensaje: ahora };
         return `📚 *Catálogo Editorial Letras de Colombia*
 
 Tenemos libros en estos géneros:
@@ -182,7 +190,7 @@ O escribe *menu* para volver al inicio.`;
 
     // OPCION 2 - HACER UN PEDIDO
     if (texto === '2' || texto === 'pedido' || texto === 'comprar') {
-        sesiones[telefono] = { paso: 'pedido' };
+        sesiones[telefono] = { paso: 'pedido', ultimoMensaje: ahora };
         return `🛒 *¿Cómo hacer un pedido?*
 
 Es muy fácil, tienes 3 opciones:
@@ -202,7 +210,7 @@ O escribe *menu* para volver al inicio.`;
 
     // OPCION 3 - ESTADO DEL PEDIDO
     if (texto === '3' || texto === 'estado') {
-        sesiones[telefono] = { paso: 'estado_pedido' };
+        sesiones[telefono] = { paso: 'estado_pedido', ultimoMensaje: ahora };
         return `📦 *Consultar estado de pedido*
 
 Por favor escríbeme tu número de pedido.
@@ -358,23 +366,7 @@ app.post('/webhook', (req, res) => {
     const mensajeUsuario = req.body.Body;
     const telefono = req.body.From;
 
-    // Limpiar timers anteriores cada vez que el usuario escribe
-    limpiarTimers(telefono);
-
     const respuesta = obtenerRespuesta(mensajeUsuario, telefono);
-
-    // Timer 2 minutos — preguntar si sigue activo
-    timers[telefono].inactivo = setTimeout(() => {
-        sesiones[telefono] = { paso: 'esperando_confirmacion' };
-        // No podemos enviar proactivamente con Twilio sandbox
-        // En producción con Meta API esto sí funciona
-    }, 2 * 60 * 1000);
-
-    // Timer 5 minutos — cerrar sesión
-    timers[telefono].cerrar = setTimeout(() => {
-        delete sesiones[telefono];
-        delete timers[telefono];
-    }, 5 * 60 * 1000);
 
     res.set('Content-Type', 'text/xml');
     res.send(`
